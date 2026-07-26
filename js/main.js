@@ -112,11 +112,18 @@
       setMode(null);
       if (err && err.name === 'NotFoundError') {
         setStatus('Odpojeno', 'off');
-        showHint('Výběr zařízení byl zrušen. Adaptér musí být zapojený v OBD zásuvce auta a v dosahu.');
+        showHint('Výběr zařízení byl zrušen, nebo nebyl žádný adaptér nalezen. Adaptér musí být ' +
+          'zapojený v OBD zásuvce, zapalování zapnuté a žádná jiná aplikace (Car Scanner!) ' +
+          'k němu nesmí být připojená.');
       } else {
         setStatus('Chyba připojení', 'off');
-        showHint('Připojení selhalo: ' + (err && err.message ? err.message : err));
-        log('ERR', String(err));
+        const detail = err && err.name ? err.name + ': ' + err.message : String(err);
+        let tip = '';
+        if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+          tip = ' Nejspíš chybí povolení: iOS Nastavení → Bluefy → zapnout Bluetooth.';
+        }
+        showHint('Připojení selhalo — ' + detail + '.' + tip + ' (Přesný text chyby mi pošli, pomůže s laděním.)');
+        log('ERR', detail);
       }
     }
   });

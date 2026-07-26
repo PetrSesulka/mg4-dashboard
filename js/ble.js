@@ -7,11 +7,13 @@
 MG.ble = {
   // Známé služby BLE OBD adaptérů — musí být v optionalServices,
   // jinak k nim prohlížeč nepustí (bezpečnostní pravidlo Web Bluetooth).
+  // Záměrně plné 128bit UUID jako text — Bluefy na iOS má se zkrácenými
+  // číselnými UUID problémy.
   KNOWN_SERVICES: [
-    0xfff0, // vGate iCar Pro BLE, vLinker, většina klonů
-    0xffe0, // klony s HM-10 modulem
-    0xffe5,
-    0xabf0, // některé ESP32 adaptéry
+    '0000fff0-0000-1000-8000-00805f9b34fb', // Veepeak, vGate iCar Pro BLE, vLinker, většina klonů
+    '0000ffe0-0000-1000-8000-00805f9b34fb', // klony s HM-10 modulem
+    '0000ffe5-0000-1000-8000-00805f9b34fb',
+    '0000abf0-0000-1000-8000-00805f9b34fb', // některé ESP32 adaptéry
     'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Microchip Transparent UART (někteří výrobci)
   ],
 
@@ -29,13 +31,25 @@ MG.ble = {
   onData(cb) { this._onData = cb; },
   onDisconnect(cb) { this._onDisconnect = cb; },
 
+  // Žádost o výběr zařízení — dvě varianty, protože Bluefy na iOS
+  // nemusí podporovat acceptAllDevices (pak zkusíme filtr podle služeb).
+  async _requestDevice() {
+    try {
+      return await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: this.KNOWN_SERVICES,
+      });
+    } catch (err) {
+      if (err && err.name === 'NotFoundError') throw err; // uživatel zrušil výběr
+      return await navigator.bluetooth.requestDevice({
+        filters: this.KNOWN_SERVICES.map(s => ({ services: [s] })),
+        optionalServices: this.KNOWN_SERVICES,
+      });
+    }
+  },
+
   async connect() {
-    // Necháme uživatele vybrat zařízení ze seznamu (jména adaptérů se různí,
-    // takže nefiltrujeme podle jména).
-    this.device = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: this.KNOWN_SERVICES,
-    });
+    this.device = await this._requestDevice();
 
     this.device.addEventListener('gattserverdisconnected', () => {
       this._writeChar = null;
@@ -45,8 +59,17 @@ MG.ble = {
 
     const server = await this.device.gatt.connect();
 
-    // Najdi službu, která má dvojici notify + write charakteristik
-    const services = await server.getPrimaryServices();
+    // Najdi službu, která má dvojici notify + write charakteristik.
+    // getPrimaryServices() bez parametru některé iOS prohlížeče neumějí,
+    // proto záložně zkoušíme známé služby jednu po druhé.
+    let services = [];
+    try { services = await server.getPrimaryServices(); } catch (e) { /* fallback níže */ }
+    if (!services || services.length === 0) {
+      services = [];
+      for (const uuid of this.KNOWN_SERVICES) {
+        try { services.push(await server.getPrimaryService(uuid)); } catch (e) { /* služba není */ }
+      }
+    }
     let found = null;
     for (const svc of services) {
       let chars;

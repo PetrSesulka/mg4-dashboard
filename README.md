@@ -8,7 +8,8 @@ a další — včetně grafů průběhu jízdy.
 ## Co potřebuješ
 
 1. **BLE OBD adaptér** — s iPhonem fungují *jen* adaptéry s Bluetooth Low Energy:
-   - vGate iCar Pro **Bluetooth 4.0 (BLE)** — ověřený, ~700 Kč
+   - Veepeak OBDCheck BLE+ (Petrův adaptér)
+   - vGate iCar Pro **Bluetooth 4.0 (BLE)** — ~700 Kč
    - vLinker MC+ — ~1000 Kč
    - OBDLink CX
 
