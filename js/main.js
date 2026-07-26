@@ -96,6 +96,7 @@
 
       MG.elm.attach(MG.ble);
       MG.elm.onLog = log;
+      log('SYS', 'BLE dvojice: ' + MG.ble.describeGatt());
       await MG.elm.init();
       elmInfoEl.textContent = name + ' · ' + MG.elm.version;
 

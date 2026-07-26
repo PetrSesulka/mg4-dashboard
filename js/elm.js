@@ -64,11 +64,31 @@ MG.elm = {
     return this._queue;
   },
 
+  // Oťukání spojení: zkouší kombinace BLE dvojic a režimů zápisu,
+  // dokud adaptér neodpoví na ATZ (reset). Vrací text odpovědi, nebo null.
+  async _probe() {
+    for (let i = 0; i < MG.ble.pairCount(); i++) {
+      if (!(await MG.ble.usePair(i))) continue;
+      for (const mode of MG.ble.writeModes()) {
+        MG.ble.setWriteMode(mode);
+        this._log('SYS', 'Zkouším ' + MG.ble.describeCurrent());
+        const r = await this.cmd('ATZ', 3500);
+        if (r && r.replace(/[\r\n>\0\s]/g, '').length > 0) return r;
+      }
+    }
+    return null;
+  },
+
   // Základní nastavení adaptéru po připojení
   async init() {
-    const atz = await this.cmd('ATZ', 7000); // reset čipu (chvíli trvá)
+    const atz = await this._probe();
+    if (atz === null) {
+      throw new Error('adaptér je přes Bluetooth připojen, ale neodpovídá na příkazy ' +
+        '(vyzkoušeny všechny kombinace). Vytáhni adaptér ze zásuvky, zasuň zpět, ' +
+        'vypni a zapni Bluetooth v telefonu a zkus to znovu.');
+    }
     const m = atz.match(/ELM327[^\r\n>]*/i);
-    this.version = m ? m[0].trim() : atz.replace(/[\r\n>]/g, ' ').trim();
+    this.version = m ? m[0].trim() : atz.replace(/[\r\n>\0]/g, ' ').trim();
 
     await this.cmd('ATE0');   // vypnout echo příkazů
     await this.cmd('ATL0');   // bez znaků LF
@@ -95,7 +115,7 @@ MG.elm = {
 
   // Pošle dotaz (např. '22B046') na danou ECU a vrátí payload jako pole bajtů,
   // nebo null když auto neodpovědělo / vrátilo chybu.
-  async request(ecuName, reqHex, timeoutMs = 4000) {
+  async request(ecuName, reqHex, timeoutMs = 2500) {
     await this._setEcu(ecuName);
     const text = await this.cmd(reqHex, timeoutMs);
     return this._parse(text, MG.ECUS[ecuName].rx);
