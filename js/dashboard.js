@@ -56,7 +56,10 @@ MG.dashboard = {
       sub: () => 'výstup DC-DC měniče',
     },
     {
-      key: 'outsideTemp', label: 'Venkovní teplota', unit: '°C', dec: 0,
+      key: 'insideTemp', label: 'Vnitřní teplota', unit: '°C', dec: 1,
+    },
+    {
+      key: 'outsideShown', label: 'Venkovní teplota', unit: '°C', dec: 0,
     },
     {
       key: 'charging', label: 'Nabíjení', unit: '', dec: 0,

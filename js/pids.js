@@ -1,18 +1,22 @@
 // Definice ECU a PID pro MG4 (platforma SAIC MSP).
 //
-// Zdroje: komunitní reverse engineering — fórum mgevs.com ("OBD Data"),
-// repo github.com/bugcoder76/MG4-EV-OBD-PID (104 PID pro ZS EV/MG5),
-// RealDash fórum (MG4 EV Electric). DID kódy vycházejí ze ZS EV/MG5;
-// na MG4 potvrzeny komunitou jen částečně → každý PID se ověří v autě
-// (sekce Diagnostika) a nefunkční poller automaticky vyřadí.
+// Zdroje: komunitní reverse engineering — projekt OVMS (vehicle_mg4.cpp,
+// mg_obd_pids.h), fórum mgevs.com ("OBD Data"), repo
+// github.com/bugcoder76/MG4-EV-OBD-PID. MG4 má podle OVMS BMS na adrese
+// 7E5/7ED (starší ZS EV mělo 781/789) a část hodnot čte standardními
+// OBD dotazy. Každý PID se ověří v autě (sekce Diagnostika) a nefunkční
+// poller automaticky vyřadí.
 //
 // Čtení: UDS "mode 22" (ReadDataByIdentifier) na konkrétní ECU,
 // protokol ISO 15765-4 CAN 11bit/500k.
+//
+// Pozor: nikdy nedotazovat BCM (740) — u zamčeného auta spouští alarm!
 
 MG.ECUS = {
-  BMS: { tx: '781', rx: '789' }, // Battery Management System
-  VCU: { tx: '7E3', rx: '7EB' }, // Vehicle Control Unit (motor, rychlost, DC-DC…)
-  STD: { tx: '7DF', rx: '7E8' }  // standardní OBD-II (mode 01, funkční dotaz)
+  BMS: { tx: '7E5', rx: '7ED' }, // Battery Management System (MG4 "Mk2")
+  VCU: { tx: '7E3', rx: '7EB' }, // Vehicle Control Unit (motor, DC-DC…) — na MG4 neověřeno
+  ATC: { tx: '750', rx: '758' }, // klimatizace (teploty kabiny)
+  STD: { tx: '7DF', rx: '7E?' }  // standardní OBD-II broadcast (mode 01), odpovídá 7E8–7EF
 };
 
 (function () {
@@ -40,8 +44,12 @@ MG.ECUS = {
     // ---- pomalá smyčka ----
     { key: 'soc',         label: 'SoC (BMS)',            ecu: 'BMS', req: '22B046', unit: '%',   group: 'slow', min: 0,    max: 100,
       decode: d => u16(d) / 10 },
+    { key: 'socStd',      label: 'SoC (OBD std)',        ecu: 'STD', req: '015B',   unit: '%',   group: 'slow', min: 0,    max: 100,
+      decode: d => d[0] * 100 / 255, fallbackFor: 'soc' },
     { key: 'socVcu',      label: 'SoC (VCU/displej)',    ecu: 'VCU', req: '22B701', unit: '%',   group: 'slow', min: 0,    max: 100,
       decode: d => u16(d) / 10, fallbackFor: 'soc' },
+    { key: 'insideTemp',  label: 'Vnitřní teplota (ATC)',ecu: 'ATC', req: '22E01C', unit: '°C',  group: 'slow', min: -30,  max: 75,
+      decode: d => u16(d) / 10 - 40 },
     { key: 'soh',         label: 'SoH baterie',          ecu: 'BMS', req: '22B061', unit: '%',   group: 'slow', min: 50,   max: 110,
       decode: d => u16(d) / 100 },
     { key: 'battTempMin', label: 'Teplota baterie min',  ecu: 'BMS', req: '22B057', unit: '°C',  group: 'slow', min: -40,  max: 80,
@@ -56,6 +64,10 @@ MG.ECUS = {
       decode: d => u16(d) / 1000 },
     { key: 'outsideTemp', label: 'Venkovní teplota',     ecu: 'VCU', req: '22BB05', unit: '°C',  group: 'slow', min: -40,  max: 60,
       decode: d => d[0] - 40 },
+    { key: 'outsideAtc',  label: 'Venkovní tepl. (ATC)', ecu: 'ATC', req: '22E01B', unit: '°C',  group: 'slow', min: -40,  max: 60,
+      decode: d => u16(d) / 10 - 40, fallbackFor: 'outsideTemp' },
+    { key: 'outsideStd',  label: 'Venkovní tepl. (std)', ecu: 'STD', req: '0146',   unit: '°C',  group: 'slow', min: -40,  max: 60,
+      decode: d => d[0] - 40, fallbackFor: 'outsideTemp' },
     { key: 'aux12v',      label: '12V (výstup DC-DC)',   ecu: 'VCU', req: '22B584', unit: 'V',   group: 'slow', min: 5,    max: 20,
       decode: d => u16(d) / 10 },
     { key: 'motorRpm',    label: 'Otáčky motoru',        ecu: 'VCU', req: '22B402', unit: 'rpm', group: 'slow', min: -12000, max: 12000,
@@ -90,9 +102,13 @@ MG.derived = {
       st.clear('consumption');
     }
 
-    // SoC: primárně z BMS, jinak z VCU
-    const soc = st.get('soc') !== null ? st.get('soc') : st.get('socVcu');
-    if (soc !== null) st.set('socShown', soc);
+    // SoC: primárně z BMS, jinak ze záložních zdrojů
+    const soc = [st.get('soc'), st.get('socVcu'), st.get('socStd')].find(x => x !== null);
+    if (soc !== undefined) st.set('socShown', soc);
+
+    // venkovní teplota: VCU, jinak klimatizace, jinak standardní OBD
+    const out = [st.get('outsideTemp'), st.get('outsideAtc'), st.get('outsideStd')].find(x => x !== null);
+    if (out !== undefined) st.set('outsideShown', out);
 
     // rozdíl napětí článků (ukazatel balancu baterie)
     const cMax = st.get('cellMax');

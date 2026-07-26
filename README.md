@@ -2,8 +2,8 @@
 
 Webová aplikace, která přes Bluetooth (BLE) OBD adaptér čte živá data z elektromobilu
 **MG4** a zobrazuje je na přehledném dashboardu: SoC, teplotu baterie a motoru,
-okamžitou spotřebu, výkon, napětí článků, 12V baterii a další — včetně grafů
-průběhu jízdy.
+vnitřní a venkovní teplotu, okamžitou spotřebu, výkon, napětí článků, 12V baterii
+a další — včetně grafů průběhu jízdy.
 
 ## Co potřebuješ
 
@@ -32,10 +32,12 @@ Bez auta si můžeš vše prohlédnout v **Demo** režimu (simulovaná jízda).
 
 ## Diagnostika (důležité pro první jízdu)
 
-PID kódy vycházejí z komunitního reverse engineeringu platformy SAIC
-(ZS EV / MG5 / MG4 — fórum [mgevs.com](https://www.mgevs.com/threads/obd-data.8909/),
-repo [MG4-EV-OBD-PID](https://github.com/bugcoder76/MG4-EV-OBD-PID)). Na MG4 nemusí
-fungovat všechny:
+PID kódy vycházejí z komunitního reverse engineeringu platformy SAIC — hlavně
+z projektu [OVMS](https://github.com/openvehicles/Open-Vehicle-Monitoring-System-3)
+(který má přímo podporu MG4: BMS na adrese 7E5/7ED, klimatizace na 750/758),
+fóra [mgevs.com](https://www.mgevs.com/threads/obd-data.8909/) a repa
+[MG4-EV-OBD-PID](https://github.com/bugcoder76/MG4-EV-OBD-PID). Přesto nemusí
+na konkrétním modelovém roce fungovat všechny:
 
 - Sekce **Diagnostika** (dole) ukazuje u každého PID surovou odpověď auta a stav.
 - Tlačítko **Otestovat všechny PID** projede celý seznam naráz — výsledek ukáže,

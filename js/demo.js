@@ -71,6 +71,7 @@ MG.demo = {
     st.set('cellMax', cellBase + 0.011);
     st.set('cellMin', cellBase - 0.008);
     st.set('outsideTemp', 21);
+    st.set('insideTemp', 23.5 + rnd(-0.3, 0.3));
     st.set('aux12v', 14.2 + rnd(-0.1, 0.1));
     st.set('motorRpm', s.speed * 72);
     st.set('motorTorque', s.power > 0 ? s.power * 9549 / Math.max(s.speed * 72, 500) : 0);

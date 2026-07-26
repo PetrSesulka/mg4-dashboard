@@ -79,12 +79,17 @@ MG.elm = {
     this._currentEcu = null;
   },
 
-  // Přepnutí na jinou ECU: nastaví hlavičku dotazu a filtr odpovědí
+  // Přepnutí na jinou ECU: nastaví hlavičku dotazu a filtr odpovědí.
+  // rx s '?' na konci (broadcast) = filtr vypnout, odpovědět smí víc ECU.
   async _setEcu(name) {
     if (this._currentEcu === name) return;
     const e = MG.ECUS[name];
     await this.cmd('ATSH' + e.tx);
-    await this.cmd('ATCRA' + e.rx);
+    if (e.rx.endsWith('?')) {
+      await this.cmd('ATAR'); // zrušit filtr přijímací adresy
+    } else {
+      await this.cmd('ATCRA' + e.rx);
+    }
     this._currentEcu = name;
   },
 
@@ -105,11 +110,13 @@ MG.elm = {
     const lines = clean.split(/[\r\n]+/).map(s => s.trim().replace(/\s+/g, ''))
       .filter(s => s.length > 0);
 
-    // zajímají nás jen rámce od naší ECU (hlavička = 3 hex znaky u 11bit CAN)
+    // zajímají nás jen rámce od naší ECU (hlavička = 3 hex znaky u 11bit CAN);
+    // '?' v rx znamená "libovolný poslední znak" (broadcast, např. 7E8–7EF)
+    const prefix = rxHeader.replace('?', '').toUpperCase();
     const frames = [];
     for (const line of lines) {
-      if (line.toUpperCase().startsWith(rxHeader.toUpperCase()) && /^[0-9A-Fa-f]+$/.test(line)) {
-        frames.push(this._hexToBytes(line.slice(rxHeader.length)));
+      if (line.toUpperCase().startsWith(prefix) && /^[0-9A-Fa-f]+$/.test(line)) {
+        frames.push(this._hexToBytes(line.slice(3))); // 3 znaky = 11bit hlavička
       }
     }
     if (frames.length === 0) return null;
