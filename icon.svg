@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#0b0f14"/>
+  <path d="M70 18 L38 70 L58 70 L50 110 L90 54 L68 54 Z" fill="#4ade80"/>
+  <text x="64" y="122" font-family="-apple-system, Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#8b95a5" text-anchor="middle">MG4</text>
+</svg>

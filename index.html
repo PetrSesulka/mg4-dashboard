@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>MG4 Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">⚡ MG4 Dashboard</div>
+  <div class="conn">
+    <span id="status" class="badge off">Odpojeno</span>
+    <button id="btnConnect" class="primary">Připojit</button>
+    <button id="btnDemo">Demo</button>
+    <button id="btnStop" hidden>Stop</button>
+  </div>
+</header>
+
+<div id="hint" class="hint" hidden></div>
+
+<main>
+  <section id="cards" class="grid"></section>
+
+  <section class="charts">
+    <div class="chart-box">
+      <h2>Výkon (kW)</h2>
+      <div class="chart-wrap"><canvas id="chartPower"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h2>Teploty (°C)</h2>
+      <div class="chart-wrap"><canvas id="chartTemp"></canvas></div>
+    </div>
+  </section>
+
+  <details id="diag">
+    <summary>Diagnostika</summary>
+    <div class="diag-actions">
+      <button id="btnTestAll">Otestovat všechny PID</button>
+      <button id="btnClearLog">Vymazat log</button>
+      <span id="elmInfo"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="pidTable">
+        <thead><tr><th>PID</th><th>Název</th><th>Surová odpověď</th><th>Hodnota</th><th>Stav</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <pre id="log"></pre>
+  </details>
+</main>
+
+<footer>Neoficiální nástroj · PID z komunitního reverse engineeringu · OBD adaptér nenechávej v autě trvale zapojený (vybíjí 12V baterii)</footer>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script src="js/state.js"></script>
+<script src="js/pids.js"></script>
+<script src="js/ble.js"></script>
+<script src="js/elm.js"></script>
+<script src="js/poller.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
