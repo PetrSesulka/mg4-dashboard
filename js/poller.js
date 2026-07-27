@@ -52,7 +52,7 @@ MG.poller = {
 
       MG.derived.update();
       MG.dashboard.render();
-      await this._sleep(50);
+      await this._sleep(150);
     }
   },
 
@@ -66,6 +66,20 @@ MG.poller = {
       }
       // záložní PID čti jen když primární nefunguje
       if (pid.fallbackFor && !this.isDead(pid.fallbackFor)) return;
+    }
+
+    // PID s atCmd není dotaz do auta, ale příkaz samotnému adaptéru (např. ATRV)
+    if (pid.atCmd) {
+      const text = await MG.elm.cmd(pid.atCmd);
+      const v = pid.parseText(text);
+      if (typeof v !== 'number' || Number.isNaN(v) || v < pid.min || v > pid.max) {
+        this._fail(pid, 'bez odpovědi', null);
+        return;
+      }
+      this._fails[pid.key] = 0;
+      MG.state.set(pid.key, v);
+      if (this.onPidResult) this.onPidResult(pid, 'OK', text.replace(/[\r\n>]/g, ' ').trim(), v);
+      return;
     }
 
     const data = await MG.elm.request(pid.ecu, pid.req);

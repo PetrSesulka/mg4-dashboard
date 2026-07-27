@@ -12,11 +12,15 @@
 //
 // Pozor: nikdy nedotazovat BCM (740) — u zamčeného auta spouští alarm!
 
+// MG4 na přímé (fyzické) adresování mode 22 neodpovídá — dotazy jdou přes
+// broadcast 7DF a filtruje se adresa odpovědi (ověřeno v autě: 010D broadcast
+// → odpověď z 7ED; 22B058 přímo na 7E5 → NO DATA). Stejně to dělá OVMS.
 MG.ECUS = {
-  BMS: { tx: '7E5', rx: '7ED' }, // Battery Management System (MG4 "Mk2")
-  VCU: { tx: '7E3', rx: '7EB' }, // Vehicle Control Unit (motor, DC-DC…) — na MG4 neověřeno
-  ATC: { tx: '750', rx: '758' }, // klimatizace (teploty kabiny)
-  STD: { tx: '7DF', rx: '7E?' }  // standardní OBD-II broadcast (mode 01), odpovídá 7E8–7EF
+  BMS:  { tx: '7DF', rx: '7ED' }, // Battery Management System (MG4 "Mk2") přes broadcast
+  VCU:  { tx: '7DF', rx: '7EB' }, // Vehicle Control Unit — na MG4 neověřeno
+  ATC:  { tx: '750', rx: '758' }, // klimatizace, přímé adresování
+  ATCF: { tx: '7DF', rx: '758' }, // klimatizace přes broadcast (záloha)
+  STD:  { tx: '7DF', rx: '7E?' }  // standardní OBD-II (mode 01), odpovídá 7E8–7EF
 };
 
 (function () {
@@ -50,6 +54,8 @@ MG.ECUS = {
       decode: d => u16(d) / 10, fallbackFor: 'soc' },
     { key: 'insideTemp',  label: 'Vnitřní teplota (ATC)',ecu: 'ATC', req: '22E01C', unit: '°C',  group: 'slow', min: -30,  max: 75,
       decode: d => u16(d) / 10 - 40 },
+    { key: 'insideTempF', label: 'Vnitřní tepl. (bcast)',ecu: 'ATCF',req: '22E01C', unit: '°C',  group: 'slow', min: -30,  max: 75,
+      decode: d => u16(d) / 10 - 40, fallbackFor: 'insideTemp' },
     { key: 'soh',         label: 'SoH baterie',          ecu: 'BMS', req: '22B061', unit: '%',   group: 'slow', min: 50,   max: 110,
       decode: d => u16(d) / 100 },
     { key: 'battTempMin', label: 'Teplota baterie min',  ecu: 'BMS', req: '22B057', unit: '°C',  group: 'slow', min: -40,  max: 80,
@@ -70,6 +76,9 @@ MG.ECUS = {
       decode: d => d[0] - 40, fallbackFor: 'outsideTemp' },
     { key: 'aux12v',      label: '12V (výstup DC-DC)',   ecu: 'VCU', req: '22B584', unit: 'V',   group: 'slow', min: 5,    max: 20,
       decode: d => u16(d) / 10 },
+    { key: 'aux12vAdapter', label: '12V (měří adaptér)', atCmd: 'ATRV',             unit: 'V',   group: 'slow', min: 5,    max: 20,
+      parseText: t => { const m = t && t.match(/(\d+(?:\.\d+)?)\s*V/i); return m ? parseFloat(m[1]) : NaN; },
+      fallbackFor: 'aux12v' },
     { key: 'motorRpm',    label: 'Otáčky motoru',        ecu: 'VCU', req: '22B402', unit: 'rpm', group: 'slow', min: -12000, max: 12000,
       decode: d => u16(d) - 32767 },
     { key: 'motorTorque', label: 'Moment motoru',        ecu: 'VCU', req: '22B401', unit: 'Nm',  group: 'slow', min: -400, max: 400,
@@ -109,6 +118,14 @@ MG.derived = {
     // venkovní teplota: VCU, jinak klimatizace, jinak standardní OBD
     const out = [st.get('outsideTemp'), st.get('outsideAtc'), st.get('outsideStd')].find(x => x !== null);
     if (out !== undefined) st.set('outsideShown', out);
+
+    // vnitřní teplota: klimatizace přímo, jinak přes broadcast
+    const ins = [st.get('insideTemp'), st.get('insideTempF')].find(x => x !== null);
+    if (ins !== undefined) st.set('insideShown', ins);
+
+    // 12V: z VCU, jinak měření přímo v adaptéru (ATRV)
+    const aux = [st.get('aux12v'), st.get('aux12vAdapter')].find(x => x !== null);
+    if (aux !== undefined) st.set('aux12vShown', aux);
 
     // rozdíl napětí článků (ukazatel balancu baterie)
     const cMax = st.get('cellMax');

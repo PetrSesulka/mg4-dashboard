@@ -51,12 +51,12 @@ MG.dashboard = {
       },
     },
     {
-      key: 'aux12v', label: '12V baterie', unit: 'V', dec: 1,
+      key: 'aux12vShown', label: '12V baterie', unit: 'V', dec: 1,
       color: v => v < 11.8 ? 'bad' : v < 12.4 ? 'warn' : 'good',
-      sub: () => 'výstup DC-DC měniče',
+      sub: st => st.get('aux12v') !== null ? 'výstup DC-DC měniče' : 'měřeno adaptérem',
     },
     {
-      key: 'insideTemp', label: 'Vnitřní teplota', unit: '°C', dec: 1,
+      key: 'insideShown', label: 'Vnitřní teplota', unit: '°C', dec: 1,
     },
     {
       key: 'outsideShown', label: 'Venkovní teplota', unit: '°C', dec: 0,
