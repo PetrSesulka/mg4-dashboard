@@ -56,6 +56,10 @@ MG.ECUS = {
       decode: d => u16(d) / 10 - 40 },
     { key: 'insideTempF', label: 'Vnitřní tepl. (bcast)',ecu: 'ATCF',req: '22E01C', unit: '°C',  group: 'slow', min: -30,  max: 75,
       decode: d => u16(d) / 10 - 40, fallbackFor: 'insideTemp' },
+    // jen pro diagnostiku: teplota u výdechů klimatizace — srovnání s PTC čidlem,
+    // které na MG4 ukazuje podezřele nízko
+    { key: 'ventTemp',    label: 'Teplota výdechů (ATC)',ecu: 'ATCF',req: '22E013', unit: '°C',  group: 'slow', min: -30,  max: 80,
+      decode: d => u16(d) / 10 - 30 },
     { key: 'soh',         label: 'SoH baterie',          ecu: 'BMS', req: '22B061', unit: '%',   group: 'slow', min: 50,   max: 110,
       decode: d => u16(d) / 100 },
     { key: 'battTempMin', label: 'Teplota baterie min',  ecu: 'BMS', req: '22B057', unit: '°C',  group: 'slow', min: -40,  max: 80,

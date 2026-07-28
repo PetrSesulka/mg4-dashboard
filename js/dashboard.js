@@ -15,7 +15,7 @@ MG.dashboard = {
       sub: () => '',
     },
     {
-      key: 'power', label: 'Výkon baterie', unit: 'kW', dec: 1,
+      key: 'power', label: 'Výkon baterie', unit: 'kW', dec: v => Math.abs(v) < 10 ? 2 : 1,
       color: v => v < -1 ? 'good' : '',
       sub: st => { const p = st.get('power'); return p !== null && p < -1 ? '⟲ rekuperace / nabíjení' : ''; },
     },
@@ -57,6 +57,7 @@ MG.dashboard = {
     },
     {
       key: 'insideShown', label: 'Vnitřní teplota', unit: '°C', dec: 1,
+      sub: () => 'čidlo PTC topení — orientační',
     },
     {
       key: 'outsideShown', label: 'Venkovní teplota', unit: '°C', dec: 0,
@@ -111,7 +112,9 @@ MG.dashboard = {
         continue;
       }
 
-      el.num.textContent = c.format ? c.format(v) : v.toFixed(c.dec);
+      // dec může být i funkce hodnoty (např. výkon: v klidu víc desetinných míst)
+      const decN = typeof c.dec === 'function' ? c.dec(v) : c.dec;
+      el.num.textContent = c.format ? c.format(v) : v.toFixed(decN);
       el.sub.textContent = c.sub ? c.sub(st) : '';
 
       let cls = 'card';

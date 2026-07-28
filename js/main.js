@@ -31,7 +31,7 @@
     for (const pid of MG.PIDS) {
       const tr = document.createElement('tr');
       tr.innerHTML =
-        '<td>' + pid.req + '</td><td>' + pid.label + '</td>' +
+        '<td>' + (pid.req || pid.atCmd || '—') + '</td><td>' + pid.label + '</td>' +
         '<td class="raw">—</td><td>—</td><td>—</td>';
       tbody.appendChild(tr);
       pidRows[pid.key] = tr.querySelectorAll('td');
