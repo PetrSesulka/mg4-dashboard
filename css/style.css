@@ -171,3 +171,84 @@ footer {
   color: var(--muted);
   text-align: center;
 }
+
+/* ---------- celoobrazovkový detail hodnoty ---------- */
+
+.card { cursor: pointer; }
+
+#detail {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(11, 15, 20, 0.97);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#detail[hidden] { display: none; }
+
+.detail-label {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.detail-gauge { width: min(88vw, 46vh); }
+.detail-gauge svg { display: block; width: 100%; height: auto; }
+
+.detail-value {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.detail-value .num {
+  font-size: clamp(56px, 17vw, 110px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.detail-value .num.good { color: var(--good); }
+.detail-value .num.warn { color: var(--warn); }
+.detail-value .num.bad  { color: var(--bad); }
+.detail-value .num.cold { color: var(--cold); }
+.detail-value .num.stale { opacity: 0.4; }
+
+.detail-value .unit {
+  font-size: clamp(16px, 4vw, 24px);
+  color: var(--muted);
+}
+
+.detail-sub { color: var(--muted); font-size: 15px; min-height: 20px; }
+
+.detail-close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 12px);
+  right: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* budík */
+.g-base  { fill: none; stroke: #232c38; stroke-width: 10; stroke-linecap: round; }
+.g-good  { fill: none; stroke: var(--good); stroke-width: 10; opacity: 0.65; }
+.g-warn  { fill: none; stroke: var(--warn); stroke-width: 10; opacity: 0.65; }
+.g-bad   { fill: none; stroke: var(--bad);  stroke-width: 10; opacity: 0.65; }
+.g-cold  { fill: none; stroke: var(--cold); stroke-width: 10; opacity: 0.65; }
+.g-tick  { stroke: var(--muted); stroke-width: 1.5; }
+.g-tick.strong { stroke: var(--text); stroke-width: 2.5; }
+.g-label { fill: var(--muted); font-size: 10px; }
+.needle line { stroke: var(--text); stroke-width: 3; stroke-linecap: round; }
+.g-hub   { fill: var(--text); }

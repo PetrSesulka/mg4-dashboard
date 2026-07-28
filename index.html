@@ -56,6 +56,15 @@
 
 <footer>Neoficiální nástroj · PID z komunitního reverse engineeringu · OBD adaptér nenechávej v autě trvale zapojený (vybíjí 12V baterii)</footer>
 
+<!-- celoobrazovkový detail hodnoty (otevře klepnutí na kartu) -->
+<div id="detail" hidden>
+  <div class="detail-label"></div>
+  <div class="detail-gauge"></div>
+  <div class="detail-value"><span class="num">—</span><span class="unit"></span></div>
+  <div class="detail-sub"></div>
+  <div class="detail-close">klepnutím zavřeš ✕</div>
+</div>
+
 <script src="vendor/chart.umd.min.js"></script>
 <script src="js/state.js"></script>
 <script src="js/pids.js"></script>
@@ -64,6 +73,7 @@
 <script src="js/poller.js"></script>
 <script src="js/demo.js"></script>
 <script src="js/dashboard.js"></script>
+<script src="js/detail.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/main.js"></script>
 </body>

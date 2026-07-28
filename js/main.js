@@ -162,6 +162,7 @@
 
   // ---------- start ----------
   MG.dashboard.init();
+  MG.detail.init();
   MG.charts.init();
   initPidTable();
   MG.dashboard.render();

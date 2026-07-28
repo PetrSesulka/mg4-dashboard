@@ -87,6 +87,7 @@ MG.dashboard = {
         '<div class="value"><span class="num">—</span><span class="unit">' + c.unit + '</span></div>' +
         '<div class="sub"></div>';
       grid.appendChild(card);
+      card.addEventListener('click', () => MG.detail.open(c.key));
       this._els[c.key] = {
         card: card,
         num: card.querySelector('.num'),
@@ -95,14 +96,21 @@ MG.dashboard = {
     }
   },
 
+  // Aktuální hodnota karty (včetně záložního klíče) — používá i detail
+  valueFor(c) {
+    const st = MG.state;
+    let v = st.get(c.key);
+    let age = st.age(c.key);
+    if (v === null && c.altKey) { v = st.get(c.altKey); age = st.age(c.altKey); }
+    return { v: v, age: age };
+  },
+
   render() {
     if (!this._els) return;
     const st = MG.state;
     for (const c of this.CARDS) {
       const el = this._els[c.key];
-      let v = st.get(c.key);
-      let age = st.age(c.key);
-      if (v === null && c.altKey) { v = st.get(c.altKey); age = st.age(c.altKey); }
+      const { v, age } = this.valueFor(c);
 
       if (v === null) {
         // placeholder (např. „stojíš") dává smysl jen když data opravdu tečou
