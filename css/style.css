@@ -111,7 +111,7 @@ main { flex: 1; padding: 12px 14px; }
 }
 .card .value .unit { font-size: 13px; font-weight: 400; color: var(--muted); white-space: nowrap; }
 
-.card .sub { font-size: 12px; color: var(--muted); min-height: 15px; }
+.card .sub { font-size: 15px; color: var(--muted); min-height: 19px; }
 
 .card.good .value { color: var(--good); }
 .card.warn .value { color: var(--warn); }
@@ -231,7 +231,7 @@ footer {
   color: var(--muted);
 }
 
-.detail-sub { color: var(--muted); font-size: 15px; min-height: 20px; }
+.detail-sub { color: var(--muted); font-size: clamp(18px, 4.5vw, 24px); min-height: 26px; }
 
 .detail-close {
   position: absolute;
